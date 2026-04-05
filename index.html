@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>パチスロ5リール 出目ジェネレーター</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div class="page-shell">
+      <header class="hero">
+        <div>
+          <p class="eyebrow">PACHISLOT REEL COMPOSER</p>
+          <h1>パチスロ5リール 出目ジェネレーター</h1>
+          <p class="hero-copy">好きな図柄を選んで、筐体画像のリール部分に合成したPNGを作れます。</p>
+        </div>
+        <div class="hero-card">
+          <p class="hero-card-label">使い方</p>
+          <ol>
+            <li>左側で各リールの上段・中段・下段の図柄を選ぶ</li>
+            <li>右側のプレビューで出目を確認する</li>
+            <li>PNGを保存、または別タブで開いて保存する</li>
+          </ol>
+        </div>
+      </header>
+
+      <main class="app-grid">
+        <section class="panel controls-panel">
+          <div class="panel-heading">
+            <div>
+              <p class="section-kicker">Settings</p>
+              <h2>出目設定</h2>
+            </div>
+            <div class="machine-badge" id="machineBadge"></div>
+          </div>
+
+          <div class="controls-list" id="controlsList"></div>
+
+          <div class="layout-section">
+            <div class="subsection-heading">
+              <div>
+                <p class="section-kicker">Cabinet</p>
+                <h2>筐体画像</h2>
+              </div>
+            </div>
+            <p class="layout-help">筐体画像は固定です。必要な場合だけ差し替え用入力を使えます。</p>
+            <div class="control-card">
+              <label for="bodyImageInput">筐体画像ファイル</label>
+              <input id="bodyImageInput" type="file" accept="image/*" />
+            </div>
+          </div>
+
+          <div class="layout-section">
+            <div class="subsection-heading">
+              <div>
+                <p class="section-kicker">Layout</p>
+                <h2>窓位置の調整</h2>
+              </div>
+              <button id="resetLayoutButton" type="button" class="secondary-button compact-button">窓位置を戻す</button>
+            </div>
+            <p class="layout-help">現在の筐体画像向けに自動調整済みです。</p>
+            <div class="layout-controls" id="layoutControls"></div>
+          </div>
+
+          <div class="panel-actions">
+            <button id="resetButton" type="button" class="secondary-button">初期値に戻す</button>
+            <button id="downloadButton" type="button" class="primary-button">PNGを保存</button>
+          </div>
+
+          <div class="panel-actions">
+            <button id="openImageButton" type="button" class="secondary-button">PNGを別タブで開く</button>
+          </div>
+
+          <div class="panel-actions">
+            <button id="copyImageButton" type="button" class="secondary-button">画像をクリップボードにコピー</button>
+          </div>
+
+          <div class="panel-actions">
+            <button id="exportImageButton" type="button" class="secondary-button">完成画像を下に表示</button>
+          </div>
+
+          <div class="status-block">
+            <p class="status-label">状態</p>
+            <p id="statusText">初期化しています...</p>
+          </div>
+
+          <div class="missing-block" id="missingBlock" hidden>
+            <p class="status-label">不足している素材</p>
+            <ul id="missingList"></ul>
+          </div>
+
+          <div class="status-block" id="exportBlock" hidden>
+            <p class="status-label">書き出し画像</p>
+            <p>下の画像は右クリック保存やコピーができます。</p>
+            <img id="exportedImage" alt="Exported slot result" />
+          </div>
+        </section>
+
+        <section class="panel preview-panel">
+          <div class="panel-heading">
+            <div>
+              <p class="section-kicker">Preview</p>
+              <h2>出目プレビュー</h2>
+            </div>
+            <div class="preview-meta" id="canvasMeta"></div>
+          </div>
+
+          <div class="preview-stage">
+            <canvas id="previewCanvas" width="1024" height="1536"></canvas>
+            <div class="preview-overlay" id="previewOverlay" aria-hidden="true"></div>
+          </div>
+
+          <div class="preview-note">
+            <p>現在の筐体画像向けに、リール窓へ均等に収まるよう自動調整済みです。</p>
+            <p>図柄を選ぶだけで、そのまま画像化できます。</p>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <script src="./machineConfig.js"></script>
+    <script src="./app.js"></script>
+  </body>
+  </html>
