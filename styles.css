@@ -342,6 +342,7 @@ button {
   font-size: 0.95rem;
   font-weight: 700;
   transition: transform 140ms ease, opacity 140ms ease, background 140ms ease;
+  touch-action: manipulation;
 }
 
 button:hover {
@@ -484,32 +485,154 @@ canvas {
   .hero-card {
     align-self: stretch;
   }
+
+  .controls-panel,
+  .preview-panel {
+    position: static;
+    max-height: none;
+    overflow: visible;
+  }
 }
 
 @media (max-width: 640px) {
+  :root {
+    --radius-xl: 20px;
+    --radius-lg: 14px;
+  }
+
   .page-shell {
-    padding: 20px 14px 32px;
+    padding: 14px 10px 28px;
+  }
+
+  .hero {
+    gap: 12px;
+    margin-bottom: 12px;
+  }
+
+  .hero h1 {
+    font-size: clamp(1.45rem, 8vw, 2.2rem);
+  }
+
+  .hero-copy,
+  .hero-card {
+    display: none;
+  }
+
+  .app-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .preview-panel {
+    order: -1;
+    position: sticky;
+    top: 0;
+    z-index: 5;
+    padding-bottom: 12px;
+  }
+
+  .controls-panel {
+    order: 1;
   }
 
   .panel {
-    padding: 18px;
+    padding: 12px;
   }
 
   .panel-heading,
-  .panel-actions,
   .subsection-heading {
     flex-direction: column;
+    gap: 8px;
+    margin-bottom: 10px;
+  }
+
+  .preview-panel .panel-heading {
+    display: none;
+  }
+
+  .preview-stage {
+    padding: 8px;
+    border-radius: 18px;
+  }
+
+  canvas {
+    border-radius: 14px;
+    max-height: 52vh;
+    object-fit: contain;
+  }
+
+  .preview-note,
+  .status-block,
+  .missing-block,
+  .layout-section,
+  .machine-badge {
+    display: none;
+  }
+
+  .controls-list {
+    gap: 10px;
+  }
+
+  .control-card {
+    padding: 10px;
+  }
+
+  .control-card h3 {
+    font-size: 0.95rem;
+    margin-bottom: 6px;
+  }
+
+  .row-picker-list {
+    gap: 10px;
+    margin-top: 8px;
+  }
+
+  .row-picker-section {
+    gap: 6px;
+  }
+
+  .row-picker-title {
+    font-size: 0.82rem;
+  }
+
+  .symbol-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 6px;
+  }
+
+  .symbol-button {
+    gap: 4px;
+    min-height: 86px;
+    padding: 6px 4px;
+    border-radius: 10px;
+  }
+
+  .symbol-thumb {
+    height: 54px;
+    border-radius: 8px;
+  }
+
+  .symbol-name {
+    font-size: 0.72rem;
+    line-height: 1.2;
+  }
+
+  .panel-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-top: 10px;
   }
 
   .panel-actions button {
     width: 100%;
+    min-height: 44px;
+    padding: 10px 12px;
+    font-size: 0.82rem;
   }
 
   .range-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .symbol-grid {
     grid-template-columns: 1fr;
   }
 }
