@@ -1,0 +1,30 @@
+  ▲ Next.js 14.2.35
+  - Local:        http://127.0.0.1:8000
+  - Network:      http://127.0.0.1:8000
+
+ ✓ Starting...
+ ✓ Ready in 9.7s
+ ○ Compiling / ...
+ GET / 200 in 47631ms
+ GET / 200 in 595ms
+ GET / 200 in 131ms
+ GET / 200 in 80ms
+ ✓ Compiled / in 1005ms (822 modules)
+ GET / 200 in 404ms
+ ✓ Compiled in 685ms (822 modules)
+ GET / 200 in 294ms
+ ○ Compiling /_error ...
+ GET / 500 in 97ms
+ GET / 500 in 100ms
+ ✓ Compiled /_not-found in 2.1s (1052 modules)
+ GET /_next/static/webpack/7d7278eee6b52061.webpack.hot-update.json 404 in 1339ms
+ GET /_next/static/webpack/7d7278eee6b52061.webpack.hot-update.json 404 in 1341ms
+ GET / 200 in 228ms
+ GET / 200 in 232ms
+ GET / 200 in 52ms
+ GET / 200 in 69ms
+ GET / 200 in 64ms
+ GET / 200 in 59ms
+ ✓ Compiled in 850ms (1047 modules)
+ GET / 200 in 328ms
+ GET / 200 in 849ms

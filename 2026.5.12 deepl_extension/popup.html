@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>DeepL翻訳</title>
+    <link rel="stylesheet" href="popup.css">
+  </head>
+  <body>
+    <main class="app">
+      <header class="header">
+        <h1>DeepL翻訳</h1>
+        <p>日本語と英語を相互翻訳</p>
+      </header>
+
+      <section class="field">
+        <label for="apiKey">DeepL APIキー</label>
+        <div class="api-row">
+          <input id="apiKey" type="password" autocomplete="off" placeholder="APIキーを入力">
+          <button id="saveKey" type="button">保存</button>
+        </div>
+        <p id="keyStatus" class="hint" aria-live="polite"></p>
+      </section>
+
+      <section class="field">
+        <label for="sourceText">翻訳したい文章</label>
+        <textarea id="sourceText" rows="6" placeholder="ここに文章を入力"></textarea>
+      </section>
+
+      <section class="controls" aria-label="翻訳方向">
+        <button id="jaToEn" class="mode active" type="button" data-source="JA" data-target="EN-US">
+          日本語 → 英語
+        </button>
+        <button id="enToJa" class="mode" type="button" data-source="EN" data-target="JA">
+          英語 → 日本語
+        </button>
+      </section>
+
+      <button id="translate" class="primary" type="button">翻訳する</button>
+
+      <section class="field result-field">
+        <label for="resultText">翻訳結果</label>
+        <textarea id="resultText" rows="6" readonly placeholder="翻訳結果がここに表示されます"></textarea>
+      </section>
+
+      <p id="message" class="message" aria-live="polite"></p>
+    </main>
+
+    <script src="popup.js"></script>
+  </body>
+</html>

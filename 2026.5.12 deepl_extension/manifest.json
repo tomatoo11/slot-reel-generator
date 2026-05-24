@@ -1,0 +1,14 @@
+{
+  "manifest_version": 3,
+  "name": "DeepL JP/EN Translator",
+  "version": "1.0.0",
+  "description": "DeepL APIを使って日本語と英語を相互翻訳するChrome拡張です。",
+  "action": {
+    "default_title": "DeepL翻訳",
+    "default_popup": "popup.html"
+  },
+  "host_permissions": [
+    "https://api-free.deepl.com/*",
+    "https://api.deepl.com/*"
+  ]
+}
