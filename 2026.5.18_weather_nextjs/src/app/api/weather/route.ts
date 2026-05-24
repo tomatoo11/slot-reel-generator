@@ -1,5 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 
+const ENV_KEY_NAMES = [
+  "OPENWEATHER_API_KEY",
+  "OPENWEATHERMAP_API_KEY",
+  "NEXT_PUBLIC_API_KEY",
+] as const;
+
 type OpenWeatherResponse = {
   name: string;
   weather: Array<{
@@ -11,8 +17,19 @@ type OpenWeatherResponse = {
   };
 };
 
+function getOpenWeatherApiKey() {
+  for (const keyName of ENV_KEY_NAMES) {
+    const value = process.env[keyName]?.trim();
+    if (value) {
+      return value;
+    }
+  }
+
+  return "";
+}
+
 export async function GET(request: NextRequest) {
-  const apiKey = process.env.OPENWEATHER_API_KEY;
+  const apiKey = getOpenWeatherApiKey();
   const city = request.nextUrl.searchParams.get("city")?.trim();
 
   if (!city) {
@@ -24,7 +41,10 @@ export async function GET(request: NextRequest) {
 
   if (!apiKey) {
     return NextResponse.json(
-      { error: ".env に OPENWEATHER_API_KEY を設定してください。" },
+      {
+        error:
+          "環境変数にOpenWeatherMapのAPIキーが設定されていません。OPENWEATHER_API_KEY を設定して、再デプロイしてください。",
+      },
       { status: 500 },
     );
   }
