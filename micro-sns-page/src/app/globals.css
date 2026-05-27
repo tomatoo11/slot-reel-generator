@@ -28,7 +28,6 @@ body {
 }
 
 button,
-input,
 textarea {
   font: inherit;
 }
@@ -44,6 +43,10 @@ textarea {
 }
 
 .header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
   margin-bottom: 20px;
 }
 
@@ -58,6 +61,27 @@ h1 {
   margin: 0;
   font-size: 40px;
   line-height: 1.15;
+}
+
+.auth-panel {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  min-height: 42px;
+}
+
+.auth-status,
+.auth-name {
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.auth-name {
+  max-width: 140px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .post-form,
@@ -78,7 +102,6 @@ label {
   font-weight: 700;
 }
 
-input,
 textarea {
   width: 100%;
   border: 1px solid var(--border);
@@ -87,18 +110,12 @@ textarea {
   color: var(--foreground);
 }
 
-input {
-  min-height: 44px;
-  padding: 0 12px;
-}
-
 textarea {
   resize: vertical;
   padding: 12px;
   line-height: 1.6;
 }
 
-input:focus,
 textarea:focus {
   border-color: var(--accent);
   outline: 3px solid rgba(37, 99, 235, 0.16);
@@ -126,6 +143,16 @@ button {
 
 button:hover:not(:disabled) {
   background: var(--accent-hover);
+}
+
+.secondary-button {
+  border: 1px solid var(--border);
+  background: #ffffff;
+  color: var(--foreground);
+}
+
+.secondary-button:hover:not(:disabled) {
+  background: var(--surface-soft);
 }
 
 button:disabled {
@@ -162,22 +189,64 @@ button:disabled {
   padding: 16px;
 }
 
+.post-layout {
+  display: grid;
+  grid-template-columns: 44px 1fr;
+  gap: 12px;
+}
+
+.avatar {
+  width: 40px;
+  height: 40px;
+  flex: none;
+  border: 1px solid var(--border);
+  border-radius: 50%;
+  background: var(--surface-soft);
+  object-fit: cover;
+}
+
+.avatar-placeholder {
+  display: grid;
+  place-items: center;
+  color: var(--muted);
+  font-weight: 700;
+}
+
+.post-body {
+  min-width: 0;
+}
+
 .post-meta {
   display: flex;
-  align-items: baseline;
+  align-items: flex-start;
   justify-content: space-between;
   gap: 12px;
   margin-bottom: 10px;
 }
 
 .post-meta strong {
+  display: block;
   overflow-wrap: anywhere;
 }
 
 .post-meta time {
-  flex: none;
+  display: block;
   color: var(--muted);
   font-size: 13px;
+  margin-top: 3px;
+}
+
+.delete-button {
+  min-height: 34px;
+  padding: 0 12px;
+  border: 1px solid rgba(180, 35, 24, 0.28);
+  background: #ffffff;
+  color: var(--error);
+  font-size: 14px;
+}
+
+.delete-button:hover:not(:disabled) {
+  background: var(--error-surface);
 }
 
 .post p {
@@ -192,13 +261,20 @@ button:disabled {
     padding: 24px 14px;
   }
 
+  .header {
+    flex-direction: column;
+  }
+
+  .auth-panel {
+    justify-content: flex-start;
+    width: 100%;
+  }
+
   h1 {
     font-size: 32px;
   }
 
   .post-meta {
-    align-items: flex-start;
-    flex-direction: column;
-    gap: 4px;
+    gap: 8px;
   }
 }

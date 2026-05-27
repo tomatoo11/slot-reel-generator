@@ -14,6 +14,13 @@ if (process.env.SEPOLIA_RPC_URL) {
   };
 }
 
+if (process.env.BASE_RPC_URL) {
+  networks.base = {
+    url: process.env.BASE_RPC_URL,
+    accounts: process.env.PRIVATE_KEY ? [process.env.PRIVATE_KEY] : []
+  };
+}
+
 const config: HardhatUserConfig = {
   solidity: {
     version: "0.8.24",

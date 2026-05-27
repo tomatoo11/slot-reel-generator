@@ -15,36 +15,20 @@ export function StageGallery() {
       </div>
 
       <div className="stage-grid">
-        {stageCards.map((card, index) => {
-          const isSpoiler = index >= 3;
-
-          return (
+        {stageCards.map((card) => (
           <article className="stage-card" key={card.stage}>
             <div className="stage-image-wrap">
-              {isSpoiler ? (
-                <div className="spoiler-cover">
-                  <p className="spoiler-label">Hidden Evolution</p>
-                  <h3>Unlocked after mint</h3>
-                  <p>Stage 4 and Stage 5 stay hidden to protect the reveal.</p>
-                </div>
-              ) : (
-                <Image src={card.image} alt={card.mood} width={320} height={320} className="stage-image" />
-              )}
+              <Image src={card.image} alt={card.mood} width={320} height={320} className="stage-image" />
             </div>
             <div className="stage-copy">
               <p className="stage-meta">
-                {card.stage} · {card.window}
+                {card.stage} / {card.window}
               </p>
-              <h3>{isSpoiler ? "CLASSIFIED" : card.mood}</h3>
-              <p>
-                {isSpoiler
-                  ? "The later decay forms are intentionally concealed so collectors can discover them in sequence."
-                  : card.description}
-              </p>
+              <h3>{card.mood}</h3>
+              <p>{card.description}</p>
             </div>
           </article>
-          );
-        })}
+        ))}
       </div>
     </section>
   );

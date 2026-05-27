@@ -5,3 +5,4 @@ artifacts
 coverage
 .env
 typechain-types
+tsconfig.tsbuildinfo

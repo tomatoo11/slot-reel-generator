@@ -17,9 +17,13 @@ NEXT_PUBLIC_FIREBASE_APP_ID=
 
 Firestoreは `src/lib/firebase.ts` から `db` として使えます。
 
+## Googleログイン設定
+
+Firebase Console で Authentication を開き、Sign-in method から Google を有効にします。
+
 ## Firestoreルール
 
-ログイン不要で投稿できるようにするには、Firebase Console の Firestore ルールを設定します。
+Googleログインした人だけ投稿できるようにするには、Firebase Console の Firestore ルールを設定します。
 
 ```js
 rules_version = '2';
@@ -28,14 +32,20 @@ service cloud.firestore {
   match /databases/{database}/documents {
     match /posts/{postId} {
       allow read: if true;
-      allow create: if true;
-      allow update, delete: if false;
+      allow create: if request.auth != null
+        && request.resource.data.uid == request.auth.uid
+        && request.resource.data.message is string
+        && request.resource.data.name is string
+        && request.resource.data.photoURL is string;
+      allow update: if false;
+      allow delete: if request.auth != null
+        && resource.data.uid == request.auth.uid;
     }
   }
 }
 ```
 
-この設定では、誰でも投稿の閲覧と新規投稿ができます。投稿の編集と削除はできません。
+この設定では、誰でも投稿を閲覧できます。投稿できるのはGoogleログイン済みのユーザーだけです。削除できるのは、その投稿を書いた本人だけです。投稿の編集はできません。
 
 ## 起動方法
 

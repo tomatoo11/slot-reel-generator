@@ -3,7 +3,16 @@
 import { useEffect, useState } from "react";
 import { BrowserProvider, Contract } from "ethers";
 
-import { contractAbi, contractAddress, moodLabels } from "../lib/contract";
+import {
+  contractAbi,
+  contractAddress,
+  lockTokenAbi,
+  moodLabels,
+  requiredLockAmount,
+  requiredLockTokenAddress,
+  requiredLockTokenId,
+  tomatooTokenId
+} from "../lib/contract";
 
 type InjectedProvider = {
   isMetaMask?: boolean;
@@ -66,17 +75,17 @@ type WalletOption = {
   provider: InjectedProvider;
 };
 
-const SEPOLIA_CHAIN_ID = "0xaa36a7";
-const SEPOLIA_NETWORK_PARAMS = {
-  chainId: SEPOLIA_CHAIN_ID,
-  chainName: "Sepolia",
+const BASE_CHAIN_ID = "0x2105";
+const BASE_NETWORK_PARAMS = {
+  chainId: BASE_CHAIN_ID,
+  chainName: "Base",
   nativeCurrency: {
-    name: "Sepolia Ether",
+    name: "Ether",
     symbol: "ETH",
     decimals: 18
   },
-  rpcUrls: ["https://ethereum-sepolia-rpc.publicnode.com"],
-  blockExplorerUrls: ["https://sepolia.etherscan.io"]
+  rpcUrls: ["https://mainnet.base.org"],
+  blockExplorerUrls: ["https://basescan.org"]
 };
 
 function inferInjectedWalletName(provider: InjectedProvider) {
@@ -94,10 +103,12 @@ function inferInjectedWalletName(provider: InjectedProvider) {
 
 export function MintPanel() {
   const [wallet, setWallet] = useState<string>("");
-  const [tokenId, setTokenId] = useState<string>("1");
   const [status, setStatus] = useState<string>("Connect a wallet to inspect or mint.");
   const [mood, setMood] = useState<string>("Unknown");
   const [daysSinceTransfer, setDaysSinceTransfer] = useState<string>("-");
+  const [balance, setBalance] = useState<string>("0");
+  const [lockBalance, setLockBalance] = useState<string>("0");
+  const [isLockApproved, setIsLockApproved] = useState<boolean>(false);
   const [isBusy, setIsBusy] = useState<boolean>(false);
   const [metaMaskProvider, setMetaMaskProvider] = useState<InjectedProvider | null>(null);
   const [walletOptions, setWalletOptions] = useState<WalletOption[]>([]);
@@ -193,19 +204,19 @@ export function MintPanel() {
     return selectedOption?.provider ?? metaMaskProvider ?? getInjectedMetaMaskProvider();
   }
 
-  async function ensureSepolia(provider: InjectedProvider) {
+  async function ensureBase(provider: InjectedProvider) {
     const currentChainId = (await provider.request({
       method: "eth_chainId"
     })) as string;
 
-    if (currentChainId?.toLowerCase() === SEPOLIA_CHAIN_ID) {
+    if (currentChainId?.toLowerCase() === BASE_CHAIN_ID) {
       return;
     }
 
     try {
       await provider.request({
         method: "wallet_switchEthereumChain",
-        params: [{ chainId: SEPOLIA_CHAIN_ID }]
+        params: [{ chainId: BASE_CHAIN_ID }]
       });
     } catch (error) {
       const switchError = error as { code?: number; message?: string };
@@ -213,7 +224,7 @@ export function MintPanel() {
       if (switchError.code === 4902) {
         await provider.request({
           method: "wallet_addEthereumChain",
-          params: [SEPOLIA_NETWORK_PARAMS]
+          params: [BASE_NETWORK_PARAMS]
         });
         return;
       }
@@ -233,7 +244,7 @@ export function MintPanel() {
     setIsBusy(true);
 
     try {
-      await ensureSepolia(preferredProvider);
+      await ensureBase(preferredProvider);
       const provider = new BrowserProvider(preferredProvider);
       const accounts = await provider.send("eth_requestAccounts", []);
       const account = accounts[0] ?? "";
@@ -260,15 +271,40 @@ export function MintPanel() {
     setIsBusy(true);
 
     try {
-      await ensureSepolia(preferredProvider);
+      await ensureBase(preferredProvider);
       const provider = new BrowserProvider(preferredProvider);
       const contract = new Contract(contractAddress, contractAbi, provider);
-      const currentMood = Number(await contract.getMood(BigInt(tokenId)));
-      const days = await contract.daysSinceTransfer(BigInt(tokenId));
+      const accounts = wallet ? [wallet] : await provider.send("eth_requestAccounts", []);
+      const account = accounts[0] ?? "";
+
+      if (!account) {
+        setStatus("Connect a wallet before reading your edition.");
+        return;
+      }
+
+      const currentBalance = await contract.balanceOf(account, tomatooTokenId);
+      const lockToken = new Contract(requiredLockTokenAddress, lockTokenAbi, provider);
+      const currentLockBalance = await lockToken.balanceOf(account, requiredLockTokenId);
+      const currentLockApproval = await lockToken.isApprovedForAll(account, contractAddress);
+
+      setWallet(account);
+      setBalance(currentBalance.toString());
+      setLockBalance(currentLockBalance.toString());
+      setIsLockApproved(currentLockApproval);
+
+      if (currentBalance === 0n) {
+        setMood("Not owned");
+        setDaysSinceTransfer("-");
+        setStatus("This wallet does not own the Tomatoo edition yet.");
+        return;
+      }
+
+      const currentMood = Number(await contract.getMood(account, tomatooTokenId));
+      const days = await contract.daysSinceTransfer(account, tomatooTokenId);
 
       setMood(moodLabels[currentMood] ?? "Unknown");
       setDaysSinceTransfer(days.toString());
-      setStatus(`Loaded mood for token #${tokenId}.`);
+      setStatus("Loaded mood for your wallet's Tomatoo edition.");
     } catch (error) {
       setStatus(`Reading token failed: ${(error as Error).message}`);
     } finally {
@@ -287,7 +323,7 @@ export function MintPanel() {
     setIsBusy(true);
 
     try {
-      await ensureSepolia(preferredProvider);
+      await ensureBase(preferredProvider);
       const provider = new BrowserProvider(preferredProvider);
       const signer = await provider.getSigner();
       const account = await signer.getAddress();
@@ -297,9 +333,74 @@ export function MintPanel() {
       setStatus(`Mint transaction sent: ${tx.hash}`);
       await tx.wait();
       setWallet(account);
-      setStatus(`Minted to ${account}. If you are not the contract owner, this call will revert.`);
+      setBalance("1");
+      setMood("CUTE");
+      setDaysSinceTransfer("0");
+      setStatus(`Minted one edition to ${account}. If you are not the contract owner, this call will revert.`);
     } catch (error) {
       setStatus(`Mint failed: ${(error as Error).message}`);
+    } finally {
+      setIsBusy(false);
+    }
+  }
+
+  async function approveLockToken() {
+    const preferredProvider = getSelectedProvider();
+
+    if (!preferredProvider) {
+      setStatus("MetaMask was not detected.");
+      return;
+    }
+
+    setIsBusy(true);
+
+    try {
+      await ensureBase(preferredProvider);
+      const provider = new BrowserProvider(preferredProvider);
+      const signer = await provider.getSigner();
+      const account = await signer.getAddress();
+      const lockToken = new Contract(requiredLockTokenAddress, lockTokenAbi, signer);
+      const tx = await lockToken.setApprovalForAll(contractAddress, true);
+
+      setWallet(account);
+      setStatus(`Approval transaction sent: ${tx.hash}`);
+      await tx.wait();
+      setIsLockApproved(true);
+      setStatus("Lock token approval is enabled. You can now lock 5 and mint.");
+    } catch (error) {
+      setStatus(`Approval failed: ${(error as Error).message}`);
+    } finally {
+      setIsBusy(false);
+    }
+  }
+
+  async function lockFiveAndMint() {
+    const preferredProvider = getSelectedProvider();
+
+    if (!preferredProvider) {
+      setStatus("MetaMask was not detected.");
+      return;
+    }
+
+    setIsBusy(true);
+
+    try {
+      await ensureBase(preferredProvider);
+      const provider = new BrowserProvider(preferredProvider);
+      const signer = await provider.getSigner();
+      const account = await signer.getAddress();
+      const contract = new Contract(contractAddress, contractAbi, signer);
+      const tx = await contract.lockToMint();
+
+      setWallet(account);
+      setStatus(`Lock-to-mint transaction sent: ${tx.hash}`);
+      await tx.wait();
+      setBalance("1");
+      setMood("CUTE");
+      setDaysSinceTransfer("0");
+      setStatus(`Locked ${requiredLockAmount.toString()} required NFTs and minted one Tomatoo edition.`);
+    } catch (error) {
+      setStatus(`Lock-to-mint failed: ${(error as Error).message}`);
     } finally {
       setIsBusy(false);
     }
@@ -318,15 +419,6 @@ export function MintPanel() {
       </div>
 
       <div className="panel-grid">
-        <div className="field">
-          <label htmlFor="tokenId">Token ID</label>
-          <input
-            id="tokenId"
-            value={tokenId}
-            onChange={(event) => setTokenId(event.target.value)}
-            inputMode="numeric"
-          />
-        </div>
         <div className="field">
           <label htmlFor="walletProvider">Wallet Provider</label>
           <select
@@ -347,10 +439,16 @@ export function MintPanel() {
         </div>
         <div className="actions">
           <button type="button" onClick={refreshMood} disabled={isBusy}>
-            Read Current Mood
+            Read My Edition
+          </button>
+          <button type="button" onClick={approveLockToken} disabled={isBusy || isLockApproved}>
+            Approve Lock NFT
+          </button>
+          <button type="button" onClick={lockFiveAndMint} disabled={isBusy}>
+            Lock 5 & Mint
           </button>
           <button type="button" onClick={mintToSelf} disabled={isBusy}>
-            Mint To Connected Wallet
+            Owner Mint
           </button>
         </div>
       </div>
@@ -363,6 +461,18 @@ export function MintPanel() {
         <div>
           <span className="stat-label">Current mood</span>
           <strong>{mood}</strong>
+        </div>
+        <div>
+          <span className="stat-label">Edition balance</span>
+          <strong>{balance} / 1</strong>
+        </div>
+        <div>
+          <span className="stat-label">Lock NFT balance</span>
+          <strong>{lockBalance} / {requiredLockAmount.toString()}</strong>
+        </div>
+        <div>
+          <span className="stat-label">Lock approval</span>
+          <strong>{isLockApproved ? "Approved" : "Not approved"}</strong>
         </div>
         <div>
           <span className="stat-label">Days since transfer</span>
