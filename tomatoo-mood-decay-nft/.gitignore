@@ -6,3 +6,4 @@ coverage
 .env
 typechain-types
 tsconfig.tsbuildinfo
+dev.server.*.log

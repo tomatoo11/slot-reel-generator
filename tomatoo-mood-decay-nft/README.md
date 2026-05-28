@@ -117,6 +117,36 @@ These files are already wired into the gallery and intended for easy swap-in:
 - `public/assets/stage4-damaged.png`
 - `public/assets/stage5-zombie.png`
 
+## Upload images to IPFS with Pinata
+
+Pinata has a free plan and supports uploading files to IPFS with a JWT API key. Create a Pinata account, generate a JWT, and add it to `.env`:
+
+```bash
+PINATA_JWT=your-pinata-jwt
+```
+
+Then upload the five local stage images:
+
+```bash
+npm run upload:pinata
+```
+
+The script prints these values and saves them to `pinata-upload-results.json`:
+
+```bash
+STAGE1_IMAGE_URI=ipfs://...
+STAGE2_IMAGE_URI=ipfs://...
+STAGE3_IMAGE_URI=ipfs://...
+STAGE4_IMAGE_URI=ipfs://...
+STAGE5_IMAGE_URI=ipfs://...
+```
+
+Copy those five `STAGE*_IMAGE_URI` values into `.env`, then update the Base contract:
+
+```bash
+npm run set-images:base
+```
+
 ## Practical customization
 
 - Change collection name and symbol in the contract constructor call.

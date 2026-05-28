@@ -453,6 +453,18 @@ export function MintPanel() {
         </div>
       </div>
 
+      <div className="risk-note">
+        <h3>Before you mint</h3>
+        <p>
+          Minting locks 5 units of the required Base ERC-1155 token ID 1 inside the Tomatoo
+          contract. The locked NFTs leave your wallet, and this contract does not include a
+          withdrawal or refund function.
+        </p>
+        <p>
+          Required token: <span>{requiredLockTokenAddress}</span>
+        </p>
+      </div>
+
       <div className="stats">
         <div>
           <span className="stat-label">Connected wallet</span>
