@@ -275,6 +275,28 @@ button:disabled {
   image-rendering: pixelated;
 }
 
+.secret-stage {
+  min-height: 320px;
+  display: grid;
+  place-items: center;
+  background:
+    linear-gradient(180deg, rgba(14, 10, 18, 0.72), rgba(6, 4, 8, 0.96)),
+    #120d11;
+}
+
+.secret-stage span {
+  width: 96px;
+  height: 96px;
+  display: grid;
+  place-items: center;
+  border: 1px solid rgba(244, 191, 97, 0.28);
+  border-radius: 18px;
+  color: var(--gold);
+  background: rgba(255, 255, 255, 0.04);
+  font-size: 4rem;
+  line-height: 1;
+}
+
 .stage-copy {
   padding-top: 14px;
 }

@@ -1,5 +1,5 @@
 export const contractAddress =
-  process.env.NEXT_PUBLIC_CONTRACT_ADDRESS ?? "0x0000000000000000000000000000000000000000";
+  process.env.NEXT_PUBLIC_CONTRACT_ADDRESS ?? "0xFE0D8E07D7e68c37544fF721119CFb82f524B75E";
 
 export const contractAbi = [
   "function mint(address to) external",
@@ -24,7 +24,7 @@ export const lockTokenAbi = [
   "function setApprovalForAll(address operator, bool approved) external"
 ] as const;
 
-export const moodLabels = ["元気", "無表情", "泣き", "傷だらけ", "ゾンビ"] as const;
+export const moodLabels = ["元気", "無表情", "泣き", "傷だらけ", "？"] as const;
 
 export const stageCards = [
   {
@@ -57,9 +57,9 @@ export const stageCards = [
   },
   {
     stage: "ステージ5",
-    mood: "ゾンビ",
+    mood: "？",
     window: "30日以上",
     image: "/assets/stage5-zombie.png",
-    description: "完全にゾンビ化した最終段階。暗い世界で、トマト王は不気味に朽ちています。"
+    description: "30日を超えた先に現れる、まだ秘密の最終形態です。"
   }
 ] as const;

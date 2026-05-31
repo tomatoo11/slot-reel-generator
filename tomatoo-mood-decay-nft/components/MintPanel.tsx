@@ -483,6 +483,14 @@ export function MintPanel() {
           取り戻し機能や返金機能はありません。
         </p>
         <p>
+          ウォレットによっては「バーンアドレスへ送る」「資産を失う可能性がある」という警告が出る
+          場合があります。これは、NFTをあなたのウォレットからTomatooコントラクトへ移動して
+          ロックするためです。送信先が下のTomatooコントラクトになっていることを確認してください。
+        </p>
+        <p>
+          ロック先Tomatoo: <span>{contractAddress}</span>
+        </p>
+        <p>
           対象NFT: <span>{requiredLockTokenAddress}</span>
         </p>
       </div>
