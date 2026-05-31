@@ -7,10 +7,10 @@ export function StageGallery() {
     <section className="stage-section">
       <div className="section-heading">
         <p className="eyebrow">変化の流れ</p>
-        <h2>ひとりの王が変わっていく5段階</h2>
+        <h2>トマト王が変わっていく5段階</h2>
         <p>
-          同じトマト王の個性を保ったまま、背景や表情が少しずつ暗くなり、
-          最後にはまだ明かされていない姿へ変化します。
+          同じトマト王の個性を保ったまま、背景と表情が少しずつ暗くなります。
+          最後の姿はサイト上では隠しています。
         </p>
       </div>
 

@@ -3,7 +3,13 @@ import hre from "hardhat";
 import { loadFixture, time } from "@nomicfoundation/hardhat-network-helpers";
 
 const { ethers } = hre;
-const TOMATOO_ID = 1n;
+const FIRST_TOKEN_ID = 1n;
+const SECOND_TOKEN_ID = 2n;
+const REQUIRED_LOCK_TOKEN_ID = 1n;
+
+function decodeMetadata(uri: string) {
+  return Buffer.from(uri.split(",")[1], "base64").toString("utf8");
+}
 
 describe("TomatooMoodDecayNFT", function () {
   async function deployFixture() {
@@ -28,18 +34,25 @@ describe("TomatooMoodDecayNFT", function () {
     return { burnToken, contract, owner, user, other };
   }
 
-  it("mints one ERC-1155 edition from the owner", async function () {
-    const { contract, owner, user } = await loadFixture(deployFixture);
+  it("mints unique ERC-1155 token ids from the owner", async function () {
+    const { contract, owner, user, other } = await loadFixture(deployFixture);
 
     await expect(contract.connect(owner).mint(user.address))
       .to.emit(contract, "TransferSingle")
-      .withArgs(owner.address, ethers.ZeroAddress, user.address, TOMATOO_ID, 1n);
+      .withArgs(owner.address, ethers.ZeroAddress, user.address, FIRST_TOKEN_ID, 1n);
 
-    expect(await contract.balanceOf(user.address, TOMATOO_ID)).to.equal(1n);
-    expect(await contract.getMood(user.address, TOMATOO_ID)).to.equal(0n);
+    await expect(contract.connect(owner).mint(other.address))
+      .to.emit(contract, "TransferSingle")
+      .withArgs(owner.address, ethers.ZeroAddress, other.address, SECOND_TOKEN_ID, 1n);
+
+    expect(await contract.balanceOf(user.address, FIRST_TOKEN_ID)).to.equal(1n);
+    expect(await contract.balanceOf(other.address, SECOND_TOKEN_ID)).to.equal(1n);
+    expect(await contract.tokenOfOwner(user.address)).to.equal(FIRST_TOKEN_ID);
+    expect(await contract.tokenOfOwner(other.address)).to.equal(SECOND_TOKEN_ID);
+    expect(await contract.getMood(FIRST_TOKEN_ID)).to.equal(0n);
   });
 
-  it("prevents a wallet from holding more than one edition", async function () {
+  it("prevents a wallet from holding more than one Tomatoo", async function () {
     const { contract, owner, user } = await loadFixture(deployFixture);
 
     await contract.connect(owner).mint(user.address);
@@ -49,90 +62,108 @@ describe("TomatooMoodDecayNFT", function () {
     );
   });
 
-  it("locks five required ERC-1155 tokens to mint one edition", async function () {
+  it("locks five required ERC-1155 tokens to mint one unique Tomatoo", async function () {
     const { burnToken, contract, user } = await loadFixture(deployFixture);
 
-    await burnToken.mint(user.address, TOMATOO_ID, 5n);
+    await burnToken.mint(user.address, REQUIRED_LOCK_TOKEN_ID, 5n);
     await burnToken.connect(user).setApprovalForAll(await contract.getAddress(), true);
 
     await expect(contract.connect(user).lockToMint())
       .to.emit(contract, "TransferSingle")
-      .withArgs(user.address, ethers.ZeroAddress, user.address, TOMATOO_ID, 1n);
+      .withArgs(user.address, ethers.ZeroAddress, user.address, FIRST_TOKEN_ID, 1n);
 
-    expect(await burnToken.balanceOf(user.address, TOMATOO_ID)).to.equal(0n);
-    expect(await burnToken.balanceOf(await contract.getAddress(), TOMATOO_ID)).to.equal(5n);
+    expect(await burnToken.balanceOf(user.address, REQUIRED_LOCK_TOKEN_ID)).to.equal(0n);
+    expect(await burnToken.balanceOf(await contract.getAddress(), REQUIRED_LOCK_TOKEN_ID)).to.equal(5n);
     expect(await contract.lockedBalance()).to.equal(5n);
-    expect(await contract.balanceOf(user.address, TOMATOO_ID)).to.equal(1n);
-    expect(await contract.getMood(user.address, TOMATOO_ID)).to.equal(0n);
+    expect(await contract.balanceOf(user.address, FIRST_TOKEN_ID)).to.equal(1n);
+    expect(await contract.tokenOfOwner(user.address)).to.equal(FIRST_TOKEN_ID);
+    expect(await contract.getMood(FIRST_TOKEN_ID)).to.equal(0n);
   });
 
   it("requires lock token approval before lock minting", async function () {
     const { burnToken, contract, user } = await loadFixture(deployFixture);
 
-    await burnToken.mint(user.address, TOMATOO_ID, 5n);
+    await burnToken.mint(user.address, REQUIRED_LOCK_TOKEN_ID, 5n);
 
     await expect(contract.connect(user).lockToMint()).to.be.reverted;
   });
 
-  it("advances wallet mood stages over time", async function () {
+  it("advances token mood stages over time", async function () {
     const { contract, owner, user } = await loadFixture(deployFixture);
 
     await contract.connect(owner).mint(user.address);
     await time.increase(8 * 24 * 60 * 60);
-    expect(await contract.getMood(user.address, TOMATOO_ID)).to.equal(1n);
+    expect(await contract.getMood(FIRST_TOKEN_ID)).to.equal(1n);
 
     await time.increase(7 * 24 * 60 * 60);
-    expect(await contract.getMood(user.address, TOMATOO_ID)).to.equal(2n);
+    expect(await contract.getMood(FIRST_TOKEN_ID)).to.equal(2n);
 
     await time.increase(8 * 24 * 60 * 60);
-    expect(await contract.getMood(user.address, TOMATOO_ID)).to.equal(3n);
+    expect(await contract.getMood(FIRST_TOKEN_ID)).to.equal(3n);
 
     await time.increase(10 * 24 * 60 * 60);
-    expect(await contract.getMood(user.address, TOMATOO_ID)).to.equal(4n);
+    expect(await contract.getMood(FIRST_TOKEN_ID)).to.equal(4n);
   });
 
-  it("resets the receiver mood timer after transfer", async function () {
+  it("resets the token mood timer after transfer", async function () {
     const { contract, owner, user, other } = await loadFixture(deployFixture);
 
     await contract.connect(owner).mint(user.address);
     await time.increase(22 * 24 * 60 * 60);
-    expect(await contract.getMood(user.address, TOMATOO_ID)).to.equal(3n);
+    expect(await contract.getMood(FIRST_TOKEN_ID)).to.equal(3n);
 
     await expect(
-      contract.connect(user).safeTransferFrom(user.address, other.address, TOMATOO_ID, 1n, "0x")
+      contract.connect(user).safeTransferFrom(user.address, other.address, FIRST_TOKEN_ID, 1n, "0x")
     )
       .to.emit(contract, "MetadataUpdate")
-      .withArgs(TOMATOO_ID);
+      .withArgs(FIRST_TOKEN_ID);
 
-    expect(await contract.balanceOf(user.address, TOMATOO_ID)).to.equal(0n);
-    expect(await contract.balanceOf(other.address, TOMATOO_ID)).to.equal(1n);
-    expect(await contract.getMood(other.address, TOMATOO_ID)).to.equal(0n);
+    expect(await contract.balanceOf(user.address, FIRST_TOKEN_ID)).to.equal(0n);
+    expect(await contract.balanceOf(other.address, FIRST_TOKEN_ID)).to.equal(1n);
+    expect(await contract.tokenOfOwner(user.address)).to.equal(0n);
+    expect(await contract.tokenOfOwner(other.address)).to.equal(FIRST_TOKEN_ID);
+    expect(await contract.getMood(FIRST_TOKEN_ID)).to.equal(0n);
   });
 
-  it("prevents transfer to a wallet that already owns one", async function () {
+  it("prevents transfer to a wallet that already owns one Tomatoo", async function () {
     const { contract, owner, user, other } = await loadFixture(deployFixture);
 
     await contract.connect(owner).mint(user.address);
     await contract.connect(owner).mint(other.address);
 
     await expect(
-      contract.connect(user).safeTransferFrom(user.address, other.address, TOMATOO_ID, 1n, "0x")
+      contract.connect(user).safeTransferFrom(user.address, other.address, FIRST_TOKEN_ID, 1n, "0x")
     ).to.be.revertedWith("Tomatoo: wallet already owns one");
   });
 
-  it("updates holder-specific uriFor output based on the current stage", async function () {
+  it("updates standard uri output based on the current token stage", async function () {
     const { contract, owner, user } = await loadFixture(deployFixture);
 
     await contract.connect(owner).mint(user.address);
-    const cuteUri = await contract.uriFor(user.address, TOMATOO_ID);
+    const cuteUri = await contract.uri(FIRST_TOKEN_ID);
+    const cuteMetadata = decodeMetadata(cuteUri);
+
     expect(cuteUri).to.contain("data:application/json;base64,");
+    expect(cuteMetadata).to.contain('"value":"CUTE"');
+    expect(cuteMetadata).to.contain("ipfs://stage1-cute");
 
     await time.increase(31 * 24 * 60 * 60);
-    const zombieUri = await contract.uriFor(user.address, TOMATOO_ID);
+    const zombieUri = await contract.uri(FIRST_TOKEN_ID);
+    const zombieMetadata = decodeMetadata(zombieUri);
 
-    const zombieMetadata = Buffer.from(zombieUri.split(",")[1], "base64").toString("utf8");
+    expect(zombieMetadata).to.contain('"name":"Tomatoo Mood Decay #1"');
     expect(zombieMetadata).to.contain('"value":"ZOMBIE"');
     expect(zombieMetadata).to.contain("ipfs://stage5-zombie");
+  });
+
+  it("emits metadata update manually for OpenSea refresh requests", async function () {
+    const { contract, owner, user } = await loadFixture(deployFixture);
+
+    await contract.connect(owner).mint(user.address);
+
+    await expect(contract.refreshMetadata(FIRST_TOKEN_ID))
+      .to.emit(contract, "MetadataUpdate")
+      .withArgs(FIRST_TOKEN_ID);
   });
 
   it("restricts admin actions to the owner", async function () {

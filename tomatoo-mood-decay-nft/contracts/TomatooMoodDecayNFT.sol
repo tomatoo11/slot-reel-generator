@@ -21,7 +21,6 @@ contract TomatooMoodDecayNFT is ERC1155, ERC1155Holder, Ownable {
         ZOMBIE
     }
 
-    uint256 public constant TOMATOO_ID = 1;
     uint256 public constant MAX_PER_WALLET = 1;
     address public immutable REQUIRED_LOCK_TOKEN;
     uint256 public constant REQUIRED_LOCK_TOKEN_ID = 1;
@@ -29,7 +28,11 @@ contract TomatooMoodDecayNFT is ERC1155, ERC1155Holder, Ownable {
 
     uint256 private constant SECONDS_PER_DAY = 1 days;
 
-    mapping(address account => uint256 lastReceivedAt) private _lastReceivedAt;
+    uint256 public nextTokenId = 1;
+
+    mapping(uint256 tokenId => uint256 lastReceivedAt) private _lastReceivedAt;
+    mapping(uint256 tokenId => bool exists) private _exists;
+    mapping(address account => uint256 tokenId) private _ownedTokenId;
     mapping(Mood mood => string imageUri) private _imageUris;
 
     constructor(address initialOwner, address requiredLockToken) ERC1155("") Ownable(initialOwner) {
@@ -45,14 +48,11 @@ contract TomatooMoodDecayNFT is ERC1155, ERC1155Holder, Ownable {
         return "TOMATOO";
     }
 
-    function mint(address to) external onlyOwner {
-        require(balanceOf(to, TOMATOO_ID) == 0, "Tomatoo: wallet already owns one");
-        _mint(to, TOMATOO_ID, 1, "");
+    function mint(address to) external onlyOwner returns (uint256) {
+        return _mintNext(to);
     }
 
-    function lockToMint() external {
-        require(balanceOf(msg.sender, TOMATOO_ID) == 0, "Tomatoo: wallet already owns one");
-
+    function lockToMint() external returns (uint256) {
         IERC1155(REQUIRED_LOCK_TOKEN).safeTransferFrom(
             msg.sender,
             address(this),
@@ -61,7 +61,11 @@ contract TomatooMoodDecayNFT is ERC1155, ERC1155Holder, Ownable {
             ""
         );
 
-        _mint(msg.sender, TOMATOO_ID, 1, "");
+        return _mintNext(msg.sender);
+    }
+
+    function tokenOfOwner(address account) external view returns (uint256) {
+        return _ownedTokenId[account];
     }
 
     function lockedBalance() external view returns (uint256) {
@@ -70,7 +74,7 @@ contract TomatooMoodDecayNFT is ERC1155, ERC1155Holder, Ownable {
 
     function setImageUri(Mood mood, string calldata imageUri) external onlyOwner {
         _imageUris[mood] = imageUri;
-        emit MetadataUpdate(TOMATOO_ID);
+        emit BatchMetadataUpdate(1, nextTokenId - 1);
     }
 
     function setImageUris(string[5] calldata imageUris) external onlyOwner {
@@ -79,13 +83,18 @@ contract TomatooMoodDecayNFT is ERC1155, ERC1155Holder, Ownable {
         _imageUris[Mood.CRYING] = imageUris[2];
         _imageUris[Mood.DAMAGED] = imageUris[3];
         _imageUris[Mood.ZOMBIE] = imageUris[4];
-        emit MetadataUpdate(TOMATOO_ID);
+        emit BatchMetadataUpdate(1, nextTokenId - 1);
     }
 
-    function getMood(address account, uint256 id) public view returns (Mood) {
-        _requireValidOwner(account, id);
+    function refreshMetadata(uint256 id) external {
+        _requireExistingToken(id);
+        emit MetadataUpdate(id);
+    }
 
-        uint256 elapsed = block.timestamp - _lastReceivedAt[account];
+    function getMood(uint256 id) public view returns (Mood) {
+        _requireExistingToken(id);
+
+        uint256 elapsed = block.timestamp - _lastReceivedAt[id];
 
         if (elapsed < 7 days) {
             return Mood.CUTE;
@@ -103,24 +112,19 @@ contract TomatooMoodDecayNFT is ERC1155, ERC1155Holder, Ownable {
         return Mood.ZOMBIE;
     }
 
-    function daysSinceTransfer(address account, uint256 id) external view returns (uint256) {
-        _requireValidOwner(account, id);
-        return (block.timestamp - _lastReceivedAt[account]) / SECONDS_PER_DAY;
+    function daysSinceTransfer(uint256 id) external view returns (uint256) {
+        _requireExistingToken(id);
+        return (block.timestamp - _lastReceivedAt[id]) / SECONDS_PER_DAY;
     }
 
-    function lastTransferAtOf(address account, uint256 id) external view returns (uint256) {
-        _requireValidOwner(account, id);
-        return _lastReceivedAt[account];
+    function lastTransferAtOf(uint256 id) external view returns (uint256) {
+        _requireExistingToken(id);
+        return _lastReceivedAt[id];
     }
 
     function uri(uint256 id) public view override returns (string memory) {
-        require(id == TOMATOO_ID, "Tomatoo: invalid token id");
-        return _buildUri(TOMATOO_ID, Mood.CUTE, 0);
-    }
-
-    function uriFor(address account, uint256 id) external view returns (string memory) {
-        Mood mood = getMood(account, id);
-        uint256 daysHeld = (block.timestamp - _lastReceivedAt[account]) / SECONDS_PER_DAY;
+        Mood mood = getMood(id);
+        uint256 daysHeld = (block.timestamp - _lastReceivedAt[id]) / SECONDS_PER_DAY;
         return _buildUri(id, mood, daysHeld);
     }
 
@@ -130,26 +134,46 @@ contract TomatooMoodDecayNFT is ERC1155, ERC1155Holder, Ownable {
         return super.supportsInterface(interfaceId);
     }
 
+    function _mintNext(address to) internal returns (uint256 tokenId) {
+        require(to != address(0), "Tomatoo: mint to zero");
+        require(_ownedTokenId[to] == 0, "Tomatoo: wallet already owns one");
+
+        tokenId = nextTokenId;
+        nextTokenId++;
+        _exists[tokenId] = true;
+        _mint(to, tokenId, 1, "");
+    }
+
     function _update(
         address from,
         address to,
         uint256[] memory ids,
         uint256[] memory values
     ) internal override {
-        for (uint256 i = 0; i < ids.length; i++) {
-            require(ids[i] == TOMATOO_ID, "Tomatoo: invalid token id");
-            require(values[i] == 1, "Tomatoo: amount must be one");
+        require(ids.length == 1, "Tomatoo: one token per transfer");
+        require(values.length == 1 && values[0] == 1, "Tomatoo: amount must be one");
+
+        uint256 id = ids[0];
+
+        if (from != address(0)) {
+            require(_exists[id], "Tomatoo: invalid token id");
+            require(_ownedTokenId[from] == id, "Tomatoo: sender does not own token");
         }
 
         if (to != address(0)) {
-            require(balanceOf(to, TOMATOO_ID) == 0, "Tomatoo: wallet already owns one");
+            require(_ownedTokenId[to] == 0, "Tomatoo: wallet already owns one");
         }
 
         super._update(from, to, ids, values);
 
+        if (from != address(0)) {
+            _ownedTokenId[from] = 0;
+        }
+
         if (to != address(0)) {
-            _lastReceivedAt[to] = block.timestamp;
-            emit MetadataUpdate(TOMATOO_ID);
+            _ownedTokenId[to] = id;
+            _lastReceivedAt[id] = block.timestamp;
+            emit MetadataUpdate(id);
         }
     }
 
@@ -159,9 +183,9 @@ contract TomatooMoodDecayNFT is ERC1155, ERC1155Holder, Ownable {
         string memory json = Base64.encode(
             bytes(
                 string.concat(
-                    '{"name":"Tomatoo Mood Decay Edition #',
+                    '{"name":"Tomatoo Mood Decay #',
                     id.toString(),
-                    '","description":"An ERC-1155 tomato king edition. Each wallet can hold one edition, and its mood decays over time after receiving it.","image":"',
+                    '","description":"An ERC-1155 tomato king NFT. Each wallet can hold one Tomatoo, and each token mood decays over time after being received.","image":"',
                     imageUri,
                     '","attributes":[',
                     '{"trait_type":"Mood","value":"',
@@ -177,9 +201,8 @@ contract TomatooMoodDecayNFT is ERC1155, ERC1155Holder, Ownable {
         return string.concat("data:application/json;base64,", json);
     }
 
-    function _requireValidOwner(address account, uint256 id) internal view {
-        require(id == TOMATOO_ID, "Tomatoo: invalid token id");
-        require(balanceOf(account, id) == 1, "Tomatoo: account does not own edition");
+    function _requireExistingToken(uint256 id) internal view {
+        require(_exists[id], "Tomatoo: invalid token id");
     }
 
     function _moodName(Mood mood) internal pure returns (string memory) {
@@ -198,4 +221,6 @@ contract TomatooMoodDecayNFT is ERC1155, ERC1155Holder, Ownable {
 
         return "ZOMBIE";
     }
+
+    event BatchMetadataUpdate(uint256 fromTokenId, uint256 toTokenId);
 }

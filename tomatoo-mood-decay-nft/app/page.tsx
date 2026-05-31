@@ -6,20 +6,19 @@ export default function HomePage() {
     <main className="page-shell">
       <section className="hero">
         <div className="hero-copy">
-          <p className="eyebrow">Base ERC-1155 Edition</p>
+          <p className="eyebrow">Base ERC-1155 NFT</p>
           <h1>Tomatoo Mood Decay NFT</h1>
           <p className="lede">
-            かわいいピクセルアートのトマト王は、ウォレットに届いてから時間が経つほど
-            気分も見た目も少しずつ崩れていきます。誰かに送ると、受け取った側では
-            また元気な姿から始まります。
+            かわいいピクセルアートのトマト王は、受け取ってから時間が経つほど少しずつ気分と見た目が変化します。
+            転送されると、新しく受け取ったウォレットでまた元気な姿から始まります。
           </p>
           <p className="quote">
             このNFTは、移動されないまま時間が経つほど壊れていきます。
           </p>
         </div>
         <div className="hero-card">
-          <p className="eyebrow">変化システム</p>
-          <h2>5段階で変化します</h2>
+          <p className="eyebrow">OpenSea対応版</p>
+          <h2>1体ごとに個別tokenIdを発行</h2>
           <ul>
             <li>0日から7日未満: 元気</li>
             <li>7日から14日未満: 無表情</li>
@@ -28,8 +27,7 @@ export default function HomePage() {
             <li>30日以上: ？</li>
           </ul>
           <p>
-            1つのウォレットが持てるTomatooは1体だけです。ミントするには、指定された
-            Base ERC-1155 NFTを5枚ロックします。
+            ミントには、指定されたBase ERC-1155 NFTを5枚ロックします。Tomatooは1ウォレットにつき1体まで保有できます。
           </p>
         </div>
       </section>
