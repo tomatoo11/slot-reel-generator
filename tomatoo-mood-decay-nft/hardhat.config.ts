@@ -38,6 +38,9 @@ const config: HardhatUserConfig = {
     cache: "./cache",
     artifacts: "./artifacts"
   },
+  etherscan: {
+    apiKey: process.env.BASESCAN_API_KEY ?? ""
+  },
   networks
 };
 

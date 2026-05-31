@@ -10,7 +10,10 @@ import {
   moodLabels,
   requiredLockAmount,
   requiredLockTokenAddress,
+  requiredLockTokenImage,
   requiredLockTokenId,
+  requiredLockTokenMetadata,
+  requiredLockTokenName,
   tomatooTokenId
 } from "../lib/contract";
 
@@ -123,6 +126,14 @@ function formatError(error: unknown) {
   return message;
 }
 
+function shortenAddress(address: string) {
+  if (!address) {
+    return "";
+  }
+
+  return `${address.slice(0, 6)}...${address.slice(-4)}`;
+}
+
 export function MintPanel() {
   const [wallet, setWallet] = useState<string>("");
   const [status, setStatus] = useState<string>("ウォレットを接続すると、保有状況とミント状態を確認できます。");
@@ -132,6 +143,8 @@ export function MintPanel() {
   const [lockBalance, setLockBalance] = useState<string>("0");
   const [isLockApproved, setIsLockApproved] = useState<boolean>(false);
   const [isBusy, setIsBusy] = useState<boolean>(false);
+  const [successTxHash, setSuccessTxHash] = useState<string>("");
+  const [hasMintedEdition, setHasMintedEdition] = useState<boolean>(false);
   const [metaMaskProvider, setMetaMaskProvider] = useState<InjectedProvider | null>(null);
   const [walletOptions, setWalletOptions] = useState<WalletOption[]>([]);
   const [selectedWalletId, setSelectedWalletId] = useState<string>("");
@@ -313,6 +326,7 @@ export function MintPanel() {
       setBalance(currentBalance.toString());
       setLockBalance(currentLockBalance.toString());
       setIsLockApproved(currentLockApproval);
+      setHasMintedEdition(currentBalance > 0n);
 
       if (currentBalance === 0n) {
         setMood("未保有");
@@ -329,38 +343,6 @@ export function MintPanel() {
       setStatus("このウォレットのTomatoo状態を読み込みました。");
     } catch (error) {
       setStatus(`読み込みに失敗しました: ${formatError(error)}`);
-    } finally {
-      setIsBusy(false);
-    }
-  }
-
-  async function mintToSelf() {
-    const preferredProvider = getSelectedProvider();
-
-    if (!preferredProvider) {
-      setStatus("MetaMaskが見つかりません。");
-      return;
-    }
-
-    setIsBusy(true);
-
-    try {
-      await ensureBase(preferredProvider);
-      const provider = new BrowserProvider(preferredProvider);
-      const signer = await provider.getSigner();
-      const account = await signer.getAddress();
-      const contract = new Contract(contractAddress, contractAbi, signer);
-      const tx = await contract.mint(account);
-
-      setStatus(`管理者ミントの取引を送信しました: ${tx.hash}`);
-      await tx.wait();
-      setWallet(account);
-      setBalance("1");
-      setMood("CUTE");
-      setDaysSinceTransfer("0");
-      setStatus(`${account} にTomatooを1体ミントしました。管理者以外はこの操作に失敗します。`);
-    } catch (error) {
-      setStatus(`管理者ミントに失敗しました: ${formatError(error)}`);
     } finally {
       setIsBusy(false);
     }
@@ -418,8 +400,14 @@ export function MintPanel() {
       setStatus(`ロックミントの取引を送信しました: ${tx.hash}`);
       await tx.wait();
       setBalance("1");
+      setLockBalance((current) => {
+        const value = BigInt(current || "0") - requiredLockAmount;
+        return value > 0n ? value.toString() : "0";
+      });
       setMood("CUTE");
       setDaysSinceTransfer("0");
+      setSuccessTxHash(tx.hash);
+      setHasMintedEdition(true);
       setStatus(`対象NFTを${requiredLockAmount.toString()}枚ロックして、Tomatooを1体ミントしました。`);
     } catch (error) {
       setStatus(`ロックミントに失敗しました: ${formatError(error)}`);
@@ -469,14 +457,24 @@ export function MintPanel() {
           <button type="button" onClick={lockFiveAndMint} disabled={isBusy}>
             5枚ロックしてミント
           </button>
-          <button type="button" onClick={mintToSelf} disabled={isBusy}>
-            管理者ミント
-          </button>
         </div>
       </div>
 
       <div className="risk-note">
         <h3>ミント前に確認してください</h3>
+        <div className="lock-token-preview">
+          <img src={requiredLockTokenImage} alt={requiredLockTokenName} />
+          <div>
+            <span className="stat-label">ロックされるNFT</span>
+            <strong>{requiredLockTokenName}</strong>
+            <p>
+              tokenId {requiredLockTokenId.toString()} を {requiredLockAmount.toString()} 枚ロックします。
+            </p>
+            <a href={requiredLockTokenMetadata} target="_blank" rel="noreferrer">
+              メタデータを確認
+            </a>
+          </div>
+        </div>
         <p>
           ミントすると、指定されたBase ERC-1155 NFTのtokenId 1を5枚、Tomatooコントラクトの中に
           ロックします。ロックされたNFTはあなたのウォレットから出ていき、このコントラクトには
@@ -498,7 +496,7 @@ export function MintPanel() {
       <div className="stats">
         <div>
           <span className="stat-label">接続ウォレット</span>
-          <strong>{wallet || "未接続"}</strong>
+          <strong title={wallet || undefined}>{wallet ? shortenAddress(wallet) : "未接続"}</strong>
         </div>
         <div>
           <span className="stat-label">現在の状態</span>
@@ -523,6 +521,25 @@ export function MintPanel() {
       </div>
 
       <p className="status">{status}</p>
+
+      {hasMintedEdition ? (
+        <div className="success-note">
+          <h3>ミント済み</h3>
+          <p>
+            このウォレットはTomatoo NFTを1体保有しています。ミント時に対象NFT
+            {requiredLockAmount.toString()} 枚のロックが完了しています。
+          </p>
+          {successTxHash ? (
+            <a href={`https://basescan.org/tx/${successTxHash}`} target="_blank" rel="noreferrer">
+              BaseScanで取引を確認
+            </a>
+          ) : (
+            <a href={`https://basescan.org/address/${contractAddress}`} target="_blank" rel="noreferrer">
+              BaseScanでTomatooを確認
+            </a>
+          )}
+        </div>
+      ) : null}
     </section>
   );
 }

@@ -234,6 +234,42 @@ button:disabled {
   color: #ffd4bb;
 }
 
+.lock-token-preview {
+  display: grid;
+  grid-template-columns: 96px 1fr;
+  gap: 16px;
+  align-items: center;
+  margin-bottom: 16px;
+  padding: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 16px;
+  background: rgba(0, 0, 0, 0.18);
+}
+
+.lock-token-preview img {
+  width: 96px;
+  height: 96px;
+  display: block;
+  border-radius: 12px;
+  object-fit: cover;
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.lock-token-preview strong {
+  display: block;
+  margin-bottom: 6px;
+  color: var(--text);
+}
+
+.lock-token-preview p {
+  margin-bottom: 8px;
+}
+
+.lock-token-preview a {
+  color: var(--gold);
+  text-decoration: none;
+}
+
 .stats > div {
   padding: 16px;
   border-radius: 18px;
@@ -243,6 +279,30 @@ button:disabled {
 .status {
   margin: 18px 0 0;
   color: #ffd4bb;
+}
+
+.success-note {
+  margin-top: 18px;
+  padding: 18px;
+  border: 1px solid rgba(72, 211, 138, 0.38);
+  border-radius: 18px;
+  background: rgba(72, 211, 138, 0.1);
+}
+
+.success-note h3 {
+  margin-bottom: 10px;
+  color: #c9ffd9;
+}
+
+.success-note p {
+  margin-bottom: 10px;
+  color: var(--text);
+  line-height: 1.6;
+}
+
+.success-note a {
+  color: #a9ffc2;
+  text-decoration: none;
 }
 
 .stage-section {

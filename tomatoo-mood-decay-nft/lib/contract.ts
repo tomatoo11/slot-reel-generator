@@ -17,6 +17,10 @@ export const requiredLockTokenAddress =
   process.env.NEXT_PUBLIC_REQUIRED_LOCK_TOKEN ?? "0x10ad2E982f6cf74D64A36cff28D439FA490cb50F";
 export const requiredLockTokenId = 1n;
 export const requiredLockAmount = 5n;
+export const requiredLockTokenName = "ありがとまとぅーNFT";
+export const requiredLockTokenImage = "https://storage.googleapis.com/tukuru-kun/images/kg9TlwIWUU5qkuXo.jpeg";
+export const requiredLockTokenMetadata =
+  "https://tukuru-metadata.mad-member-tools.com/metadata/8453/0x10ad2e982f6cf74d64a36cff28d439fa490cb50f/1.json";
 
 export const lockTokenAbi = [
   "function balanceOf(address account, uint256 id) external view returns (uint256)",
