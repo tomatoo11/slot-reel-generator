@@ -98,13 +98,35 @@ function inferInjectedWalletName(provider: InjectedProvider) {
   if (provider.isOkxWallet || provider.isOKExWallet) {
     return "OKX Wallet";
   }
-  return "Injected Wallet";
+  return "ウォレット";
+}
+
+function formatError(error: unknown) {
+  const message = (error as Error).message ?? String(error);
+
+  if (message.includes("user rejected") || message.includes("User rejected")) {
+    return "ウォレットで操作がキャンセルされました。";
+  }
+  if (message.includes("insufficient funds")) {
+    return "ガス代用のBase ETHが足りません。";
+  }
+  if (message.includes("wallet already owns one")) {
+    return "このウォレットはすでにTomatooを1体持っています。";
+  }
+  if (message.includes("ERC1155InsufficientBalance")) {
+    return "ロックに必要なNFTの枚数が足りません。";
+  }
+  if (message.includes("missing revert data") || message.includes("execution reverted")) {
+    return "取引が失敗しました。対象NFTを5枚持っているか、承認が完了しているか確認してください。";
+  }
+
+  return message;
 }
 
 export function MintPanel() {
   const [wallet, setWallet] = useState<string>("");
-  const [status, setStatus] = useState<string>("Connect a wallet to inspect or mint.");
-  const [mood, setMood] = useState<string>("Unknown");
+  const [status, setStatus] = useState<string>("ウォレットを接続すると、保有状況とミント状態を確認できます。");
+  const [mood, setMood] = useState<string>("未確認");
   const [daysSinceTransfer, setDaysSinceTransfer] = useState<string>("-");
   const [balance, setBalance] = useState<string>("0");
   const [lockBalance, setLockBalance] = useState<string>("0");
@@ -154,7 +176,7 @@ export function MintPanel() {
       setMetaMaskProvider(selectedProvider);
 
       if (allOptions.length === 0) {
-        setStatus("No supported injected wallet was detected. Open this page in a browser/profile where MetaMask, Phantom, or another EVM wallet is enabled.");
+        setStatus("対応ウォレットが見つかりません。MetaMaskなどのEVMウォレットが入ったブラウザで開いてください。");
         return;
       }
 
@@ -168,7 +190,7 @@ export function MintPanel() {
         return preferredOption.id;
       });
 
-      setStatus("Choose a wallet provider, then connect from the selected wallet.");
+      setStatus("ウォレットを選んで接続してください。");
     };
 
     const onAnnounceProvider = (event: CustomEvent<Eip6963Detail>) => {
@@ -195,7 +217,7 @@ export function MintPanel() {
     }
 
     if (!window.ethereum) {
-      setStatus("MetaMask was not detected. Install it to mint or read on-chain mood.");
+      setStatus("MetaMaskが見つかりません。ミントや状態確認にはEVMウォレットが必要です。");
     }
   }, [metaMaskProvider]);
 
@@ -237,7 +259,7 @@ export function MintPanel() {
     const preferredProvider = getSelectedProvider();
 
     if (!preferredProvider) {
-      setStatus("No wallet provider is selected. Pick a wallet first.");
+      setStatus("ウォレットが選択されていません。先にウォレットを選んでください。");
       return;
     }
 
@@ -251,10 +273,10 @@ export function MintPanel() {
 
       setWallet(account);
       const selectedName =
-        walletOptions.find((option) => option.id === selectedWalletId)?.name ?? "selected wallet";
-      setStatus(`Connected with ${selectedName}: ${account}`);
+        walletOptions.find((option) => option.id === selectedWalletId)?.name ?? "選択したウォレット";
+      setStatus(`${selectedName}で接続しました: ${account}`);
     } catch (error) {
-      setStatus(`Wallet connection failed: ${(error as Error).message}`);
+      setStatus(`ウォレット接続に失敗しました: ${formatError(error)}`);
     } finally {
       setIsBusy(false);
     }
@@ -264,7 +286,7 @@ export function MintPanel() {
     const preferredProvider = getSelectedProvider();
 
     if (!preferredProvider) {
-      setStatus("MetaMask was not detected.");
+      setStatus("MetaMaskが見つかりません。");
       return;
     }
 
@@ -278,7 +300,7 @@ export function MintPanel() {
       const account = accounts[0] ?? "";
 
       if (!account) {
-        setStatus("Connect a wallet before reading your edition.");
+        setStatus("Tomatooの状態を読む前にウォレットを接続してください。");
         return;
       }
 
@@ -293,20 +315,20 @@ export function MintPanel() {
       setIsLockApproved(currentLockApproval);
 
       if (currentBalance === 0n) {
-        setMood("Not owned");
+        setMood("未保有");
         setDaysSinceTransfer("-");
-        setStatus("This wallet does not own the Tomatoo edition yet.");
+        setStatus("このウォレットはまだTomatooを持っていません。");
         return;
       }
 
       const currentMood = Number(await contract.getMood(account, tomatooTokenId));
       const days = await contract.daysSinceTransfer(account, tomatooTokenId);
 
-      setMood(moodLabels[currentMood] ?? "Unknown");
+      setMood(moodLabels[currentMood] ?? "不明");
       setDaysSinceTransfer(days.toString());
-      setStatus("Loaded mood for your wallet's Tomatoo edition.");
+      setStatus("このウォレットのTomatoo状態を読み込みました。");
     } catch (error) {
-      setStatus(`Reading token failed: ${(error as Error).message}`);
+      setStatus(`読み込みに失敗しました: ${formatError(error)}`);
     } finally {
       setIsBusy(false);
     }
@@ -316,7 +338,7 @@ export function MintPanel() {
     const preferredProvider = getSelectedProvider();
 
     if (!preferredProvider) {
-      setStatus("MetaMask was not detected.");
+      setStatus("MetaMaskが見つかりません。");
       return;
     }
 
@@ -330,15 +352,15 @@ export function MintPanel() {
       const contract = new Contract(contractAddress, contractAbi, signer);
       const tx = await contract.mint(account);
 
-      setStatus(`Mint transaction sent: ${tx.hash}`);
+      setStatus(`管理者ミントの取引を送信しました: ${tx.hash}`);
       await tx.wait();
       setWallet(account);
       setBalance("1");
       setMood("CUTE");
       setDaysSinceTransfer("0");
-      setStatus(`Minted one edition to ${account}. If you are not the contract owner, this call will revert.`);
+      setStatus(`${account} にTomatooを1体ミントしました。管理者以外はこの操作に失敗します。`);
     } catch (error) {
-      setStatus(`Mint failed: ${(error as Error).message}`);
+      setStatus(`管理者ミントに失敗しました: ${formatError(error)}`);
     } finally {
       setIsBusy(false);
     }
@@ -348,7 +370,7 @@ export function MintPanel() {
     const preferredProvider = getSelectedProvider();
 
     if (!preferredProvider) {
-      setStatus("MetaMask was not detected.");
+      setStatus("MetaMaskが見つかりません。");
       return;
     }
 
@@ -363,12 +385,12 @@ export function MintPanel() {
       const tx = await lockToken.setApprovalForAll(contractAddress, true);
 
       setWallet(account);
-      setStatus(`Approval transaction sent: ${tx.hash}`);
+      setStatus(`承認の取引を送信しました: ${tx.hash}`);
       await tx.wait();
       setIsLockApproved(true);
-      setStatus("Lock token approval is enabled. You can now lock 5 and mint.");
+      setStatus("承認が完了しました。次に「5枚ロックしてミント」を押せます。");
     } catch (error) {
-      setStatus(`Approval failed: ${(error as Error).message}`);
+      setStatus(`承認に失敗しました: ${formatError(error)}`);
     } finally {
       setIsBusy(false);
     }
@@ -378,7 +400,7 @@ export function MintPanel() {
     const preferredProvider = getSelectedProvider();
 
     if (!preferredProvider) {
-      setStatus("MetaMask was not detected.");
+      setStatus("MetaMaskが見つかりません。");
       return;
     }
 
@@ -393,14 +415,14 @@ export function MintPanel() {
       const tx = await contract.lockToMint();
 
       setWallet(account);
-      setStatus(`Lock-to-mint transaction sent: ${tx.hash}`);
+      setStatus(`ロックミントの取引を送信しました: ${tx.hash}`);
       await tx.wait();
       setBalance("1");
       setMood("CUTE");
       setDaysSinceTransfer("0");
-      setStatus(`Locked ${requiredLockAmount.toString()} required NFTs and minted one Tomatoo edition.`);
+      setStatus(`対象NFTを${requiredLockAmount.toString()}枚ロックして、Tomatooを1体ミントしました。`);
     } catch (error) {
-      setStatus(`Lock-to-mint failed: ${(error as Error).message}`);
+      setStatus(`ロックミントに失敗しました: ${formatError(error)}`);
     } finally {
       setIsBusy(false);
     }
@@ -410,24 +432,24 @@ export function MintPanel() {
     <section className="panel">
       <div className="panel-header">
         <div>
-          <p className="eyebrow">Wallet</p>
-          <h2>Mint & Mood Console</h2>
+          <p className="eyebrow">ウォレット</p>
+          <h2>ミントと状態確認</h2>
         </div>
         <button className="ghost-button" type="button" onClick={connectWallet} disabled={isBusy}>
-          {wallet ? "Reconnect" : "Connect Wallet"}
+          {wallet ? "再接続" : "ウォレット接続"}
         </button>
       </div>
 
       <div className="panel-grid">
         <div className="field">
-          <label htmlFor="walletProvider">Wallet Provider</label>
+          <label htmlFor="walletProvider">ウォレット</label>
           <select
             id="walletProvider"
             value={selectedWalletId}
             onChange={(event) => setSelectedWalletId(event.target.value)}
           >
             {walletOptions.length === 0 ? (
-              <option value="">No wallet detected</option>
+              <option value="">ウォレット未検出</option>
             ) : (
               walletOptions.map((option) => (
                 <option key={option.id} value={option.id}>
@@ -439,55 +461,55 @@ export function MintPanel() {
         </div>
         <div className="actions">
           <button type="button" onClick={refreshMood} disabled={isBusy}>
-            Read My Edition
+            状態を確認
           </button>
           <button type="button" onClick={approveLockToken} disabled={isBusy || isLockApproved}>
-            Approve Lock NFT
+            ロック許可
           </button>
           <button type="button" onClick={lockFiveAndMint} disabled={isBusy}>
-            Lock 5 & Mint
+            5枚ロックしてミント
           </button>
           <button type="button" onClick={mintToSelf} disabled={isBusy}>
-            Owner Mint
+            管理者ミント
           </button>
         </div>
       </div>
 
       <div className="risk-note">
-        <h3>Before you mint</h3>
+        <h3>ミント前に確認してください</h3>
         <p>
-          Minting locks 5 units of the required Base ERC-1155 token ID 1 inside the Tomatoo
-          contract. The locked NFTs leave your wallet, and this contract does not include a
-          withdrawal or refund function.
+          ミントすると、指定されたBase ERC-1155 NFTのtokenId 1を5枚、Tomatooコントラクトの中に
+          ロックします。ロックされたNFTはあなたのウォレットから出ていき、このコントラクトには
+          取り戻し機能や返金機能はありません。
         </p>
         <p>
-          Required token: <span>{requiredLockTokenAddress}</span>
+          対象NFT: <span>{requiredLockTokenAddress}</span>
         </p>
       </div>
 
       <div className="stats">
         <div>
-          <span className="stat-label">Connected wallet</span>
-          <strong>{wallet || "Not connected"}</strong>
+          <span className="stat-label">接続ウォレット</span>
+          <strong>{wallet || "未接続"}</strong>
         </div>
         <div>
-          <span className="stat-label">Current mood</span>
+          <span className="stat-label">現在の状態</span>
           <strong>{mood}</strong>
         </div>
         <div>
-          <span className="stat-label">Edition balance</span>
+          <span className="stat-label">Tomatoo保有数</span>
           <strong>{balance} / 1</strong>
         </div>
         <div>
-          <span className="stat-label">Lock NFT balance</span>
+          <span className="stat-label">対象NFT保有数</span>
           <strong>{lockBalance} / {requiredLockAmount.toString()}</strong>
         </div>
         <div>
-          <span className="stat-label">Lock approval</span>
-          <strong>{isLockApproved ? "Approved" : "Not approved"}</strong>
+          <span className="stat-label">ロック許可</span>
+          <strong>{isLockApproved ? "許可済み" : "未許可"}</strong>
         </div>
         <div>
-          <span className="stat-label">Days since transfer</span>
+          <span className="stat-label">受け取り後の日数</span>
           <strong>{daysSinceTransfer}</strong>
         </div>
       </div>

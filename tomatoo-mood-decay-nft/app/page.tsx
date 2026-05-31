@@ -6,29 +6,30 @@ export default function HomePage() {
     <main className="page-shell">
       <section className="hero">
         <div className="hero-copy">
-          <p className="eyebrow">Dynamic ERC-1155 Edition</p>
+          <p className="eyebrow">Base ERC-1155 Edition</p>
           <h1>Tomatoo Mood Decay NFT</h1>
           <p className="lede">
-            A cute pixel-art tomato king edition rots emotionally and physically as days pass after
-            your wallet receives it. Move it, and the receiver's clock resets.
+            かわいいピクセルアートのトマト王は、ウォレットに届いてから時間が経つほど
+            気分も見た目も少しずつ崩れていきます。誰かに送ると、受け取った側では
+            また元気な姿から始まります。
           </p>
           <p className="quote">
-            "This NFT becomes more broken over time unless it is transferred."
+            このNFTは、移動されないまま時間が経つほど壊れていきます。
           </p>
         </div>
         <div className="hero-card">
-          <p className="eyebrow">Preview Card</p>
-          <h2>How the decay loop works</h2>
+          <p className="eyebrow">変化システム</p>
+          <h2>5段階で変化します</h2>
           <ul>
-            <li>0 to &lt;7 days: CUTE</li>
-            <li>7 to &lt;14 days: BLANK</li>
-            <li>14 to &lt;21 days: CRYING</li>
-            <li>21 to &lt;30 days: DAMAGED</li>
-            <li>30+ days: ZOMBIE</li>
+            <li>0日から7日未満: 元気</li>
+            <li>7日から14日未満: 無表情</li>
+            <li>14日から21日未満: 泣き</li>
+            <li>21日から30日未満: 傷だらけ</li>
+            <li>30日以上: ゾンビ</li>
           </ul>
           <p>
-            Each wallet can hold only one edition. Lock 5 required ERC-1155 tokens to mint, then
-            transfers refresh the receiver's timer and restore the king.
+            1つのウォレットが持てるTomatooは1体だけです。ミントするには、指定された
+            Base ERC-1155 NFTを5枚ロックします。
           </p>
         </div>
       </section>

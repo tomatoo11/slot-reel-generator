@@ -6,11 +6,11 @@ export function StageGallery() {
   return (
     <section className="stage-section">
       <div className="section-heading">
-        <p className="eyebrow">Decay Journey</p>
-        <h2>Five moods, one doomed king</h2>
+        <p className="eyebrow">変化の流れ</p>
+        <h2>ひとりの王が変わっていく5段階</h2>
         <p>
-          The same tomato monarch remains recognizable throughout the entire lifecycle while the
-          world around him becomes colder, flatter, sadder, damaged, and finally undead.
+          同じトマト王の個性を保ったまま、背景や表情が少しずつ暗くなり、
+          最後にはゾンビの姿へ変化します。
         </p>
       </div>
 

@@ -7,3 +7,4 @@ coverage
 typechain-types
 tsconfig.tsbuildinfo
 dev.server.*.log
+dev*.log

@@ -24,42 +24,42 @@ export const lockTokenAbi = [
   "function setApprovalForAll(address operator, bool approved) external"
 ] as const;
 
-export const moodLabels = ["CUTE", "BLANK", "CRYING", "DAMAGED", "ZOMBIE"] as const;
+export const moodLabels = ["元気", "無表情", "泣き", "傷だらけ", "ゾンビ"] as const;
 
 export const stageCards = [
   {
-    stage: "Stage 1",
-    mood: "CUTE",
-    window: "0 to <7 days",
+    stage: "ステージ1",
+    mood: "元気",
+    window: "0日から7日未満",
     image: "/assets/stage1-cute.png",
-    description: "Warm, bright, charming tomato king with a hopeful smile."
+    description: "明るくてかわいいトマト王。王冠も服もきれいで、まだ元気いっぱいです。"
   },
   {
-    stage: "Stage 2",
-    mood: "BLANK",
-    window: "7 to <14 days",
+    stage: "ステージ2",
+    mood: "無表情",
+    window: "7日から14日未満",
     image: "/assets/stage2-blank.png",
-    description: "The kingdom loses its sparkle and the king goes emotionally flat."
+    description: "少し気持ちが抜け落ちた状態。背景も暗くなり、表情から元気が消えます。"
   },
   {
-    stage: "Stage 3",
-    mood: "CRYING",
-    window: "14 to <21 days",
+    stage: "ステージ3",
+    mood: "泣き",
+    window: "14日から21日未満",
     image: "/assets/stage3-crying.png",
-    description: "Tears arrive, the mood darkens, and the room becomes heavy."
+    description: "涙が止まらない状態。王国の空気も重くなり、悲しさが強くなります。"
   },
   {
-    stage: "Stage 4",
-    mood: "DAMAGED",
-    window: "21 to <30 days",
+    stage: "ステージ4",
+    mood: "傷だらけ",
+    window: "21日から30日未満",
     image: "/assets/stage4-damaged.png",
-    description: "The body wears down and the royal look starts to collapse."
+    description: "体も王冠も傷み始めます。かわいさは残りつつ、かなりボロボロです。"
   },
   {
-    stage: "Stage 5",
-    mood: "ZOMBIE",
-    window: "30+ days",
+    stage: "ステージ5",
+    mood: "ゾンビ",
+    window: "30日以上",
     image: "/assets/stage5-zombie.png",
-    description: "The tomato king is fully eerie, undead, and ready for the crypt."
+    description: "完全にゾンビ化した最終段階。暗い世界で、トマト王は不気味に朽ちています。"
   }
 ] as const;

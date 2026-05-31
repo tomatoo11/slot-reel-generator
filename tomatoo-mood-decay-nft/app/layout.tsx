@@ -3,12 +3,12 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   title: "Tomatoo Mood Decay NFT",
-  description: "A dynamic ERC-1155 tomato king edition that decays as time passes after receiving it."
+  description: "受け取ってから時間が経つほど姿が変わる、Base上のトマト王NFTです。"
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en">
+    <html lang="ja">
       <body>{children}</body>
     </html>
   );
